@@ -105,17 +105,21 @@ Central mode controller:
 
 ### Local Development
 ```bash
-# Start a local server
-python3 -m http.server 8080
+# Quick start (recommended)
+cd /Users/sergeibenkovitch/repos/zen-math-prototype
+./dev-server.sh
 
-# Open in browser
-open http://localhost:8080
+# Or manually
+python3 -m http.server 3051
+open http://localhost:3051
 ```
+
+> **Port Configuration:** This project uses port **3051** (see `.project-config.json`)
 
 ### Testing Module Loads
 ```bash
 # Visit test page
-open http://localhost:8080/test.html
+open http://localhost:3051/test.html
 # Check browser console for module load results
 ```
 

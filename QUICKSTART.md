@@ -2,11 +2,21 @@
 
 ## Running the App
 
+**Quick Start (Recommended):**
 ```bash
 cd /Users/sergeibenkovitch/repos/zen-math-prototype
-python3 -m http.server 8080
-open http://localhost:8080
+./dev-server.sh
+# Opens on http://localhost:3051
 ```
+
+**Manual Start:**
+```bash
+cd /Users/sergeibenkovitch/repos/zen-math-prototype
+python3 -m http.server 3051
+open http://localhost:3051
+```
+
+> **Note:** This project uses port **3051** (configured in `.project-config.json`)
 
 ## Project Structure
 
@@ -133,14 +143,14 @@ this.removeStone(stone);
 
 ### Manual Test
 ```bash
-open http://localhost:8080
+open http://localhost:3051
 # Drag stones around
 # Verify grouping works
 ```
 
 ### Module Load Test
 ```bash
-open http://localhost:8080/test.html
+open http://localhost:3051/test.html
 # Check console for module load results
 ```
 
@@ -158,8 +168,8 @@ modeManager.switchMode('mode-id')
 
 ## Development Workflow
 
-1. **Start server:** `python3 -m http.server 8080`
-2. **Open browser:** `http://localhost:8080`
+1. **Start server:** `./dev-server.sh` (or `python3 -m http.server 3051`)
+2. **Open browser:** `http://localhost:3051`
 3. **Make changes** to JS files
 4. **Refresh browser** (no build step!)
 5. **Check console** for errors
@@ -273,9 +283,9 @@ Check these files for detailed information:
 
 | Task | Command |
 |------|---------|
-| Start server | `python3 -m http.server 8080` |
-| Open app | `open http://localhost:8080` |
-| Test modules | `open http://localhost:8080/test.html` |
+| Start server | `./dev-server.sh` |
+| Open app | `open http://localhost:3051` |
+| Test modules | `open http://localhost:3051/test.html` |
 | Check mode | `modeManager.getCurrentMode()` |
 | List modes | `modeManager.modes` |
 

@@ -1,0 +1,14 @@
+{
+  "name": "zen-math-prototype",
+  "port": 3051,
+  "description": "Zen Math multi-mode learning system - local development server",
+  "urls": {
+    "local": "http://localhost:3051",
+    "app": "http://localhost:3051/index.html",
+    "test": "http://localhost:3051/test.html"
+  },
+  "commands": {
+    "start": "python3 -m http.server 3051",
+    "open": "open http://localhost:3051"
+  }
+}
