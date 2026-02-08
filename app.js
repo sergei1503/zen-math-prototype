@@ -126,19 +126,40 @@ class ModeManager {
 // Initialize mode manager
 const modeManager = new ModeManager();
 
-// Register available modes
+// Register all available modes
 modeManager.registerMode(FreeExploreMode);
+modeManager.registerMode(NumberStructuresMode);
+modeManager.registerMode(BalanceScaleMode);
+modeManager.registerMode(StackBalanceMode);
 
 // Set initial mode
 modeManager.switchMode('free-explore');
 
+// Initialize UI systems
+const modeSelector = new ModeSelector(modeManager, document.getElementById('garden-container'));
+const hintSystem = new HintSystem(canvas);
+const challengeEngine = new ChallengeEngine(modeManager);
+
+// Update hint system when mode changes
+const originalSwitchMode = modeManager.switchMode.bind(modeManager);
+modeManager.switchMode = function(modeId) {
+    originalSwitchMode(modeId);
+    hintSystem.setMode(modeId);
+    modeSelector.updateCurrentMode();
+};
+// Trigger initial hint mode
+hintSystem.setMode('free-explore');
+
+// Track interaction for hint system
+let hasInteractionThisFrame = false;
+
 // Bind event listeners
-canvas.addEventListener('mousedown', (e) => modeManager.onPointerDown(e));
-canvas.addEventListener('mousemove', (e) => modeManager.onPointerMove(e));
-canvas.addEventListener('mouseup', (e) => modeManager.onPointerUp(e));
-canvas.addEventListener('touchstart', (e) => modeManager.onPointerDown(e));
-canvas.addEventListener('touchmove', (e) => modeManager.onPointerMove(e));
-canvas.addEventListener('touchend', (e) => modeManager.onPointerUp(e));
+canvas.addEventListener('mousedown', (e) => { hasInteractionThisFrame = true; modeManager.onPointerDown(e); });
+canvas.addEventListener('mousemove', (e) => { if (modeManager.draggedStone) hasInteractionThisFrame = true; modeManager.onPointerMove(e); });
+canvas.addEventListener('mouseup', (e) => { hasInteractionThisFrame = true; modeManager.onPointerUp(e); challengeEngine.checkGoals(); });
+canvas.addEventListener('touchstart', (e) => { hasInteractionThisFrame = true; modeManager.onPointerDown(e); });
+canvas.addEventListener('touchmove', (e) => { if (modeManager.draggedStone) hasInteractionThisFrame = true; modeManager.onPointerMove(e); });
+canvas.addEventListener('touchend', (e) => { hasInteractionThisFrame = true; modeManager.onPointerUp(e); challengeEngine.checkGoals(); });
 window.addEventListener('blur', () => modeManager.onBlur());
 
 // Animation loop
@@ -151,15 +172,25 @@ function animate(currentTime) {
     if (mode && mode.isActive) {
         mode.update(deltaTime);
         mode.render();
+
+        // Update and render hint system
+        hintSystem.update(deltaTime, hasInteractionThisFrame);
+        hintSystem.render(ctx, canvas.width, canvas.height);
+
+        // Render challenge overlay
+        challengeEngine.render(ctx, canvas);
     }
 
+    hasInteractionThisFrame = false;
     requestAnimationFrame(animate);
 }
 
 // Start animation
 requestAnimationFrame(animate);
 
-// Export mode manager for potential external control
+// Export for console access
 if (typeof window !== 'undefined') {
     window.modeManager = modeManager;
+    window.challengeEngine = challengeEngine;
+    window.hintSystem = hintSystem;
 }
