@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Refactor</title>
+    <script>
+        // Test script to verify all modules load correctly
+        window.addEventListener('load', function() {
+            console.log('Testing module loads...');
+
+            // Test Stone class
+            if (typeof Stone !== 'undefined') {
+                console.log('✓ Stone class loaded');
+                const testStone = new Stone(100, 100, 'test');
+                console.log('✓ Stone instance created:', testStone);
+            } else {
+                console.error('✗ Stone class not found');
+            }
+
+            // Test Renderer class
+            if (typeof Renderer !== 'undefined') {
+                console.log('✓ Renderer class loaded');
+            } else {
+                console.error('✗ Renderer class not found');
+            }
+
+            // Test ModeBase class
+            if (typeof ModeBase !== 'undefined') {
+                console.log('✓ ModeBase class loaded');
+            } else {
+                console.error('✗ ModeBase class not found');
+            }
+
+            // Test FreeExploreMode class
+            if (typeof FreeExploreMode !== 'undefined') {
+                console.log('✓ FreeExploreMode class loaded');
+            } else {
+                console.error('✗ FreeExploreMode class not found');
+            }
+
+            console.log('All module tests complete!');
+        });
+    </script>
+</head>
+<body>
+    <h1>Module Load Test</h1>
+    <p>Check console for results</p>
+
+    <!-- Core modules -->
+    <script src="core/Stone.js"></script>
+    <script src="core/Renderer.js"></script>
+    <script src="modes/ModeBase.js"></script>
+    <script src="modes/FreeExploreMode.js"></script>
+</body>
+</html>

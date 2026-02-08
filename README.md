@@ -1,96 +1,227 @@
-# Zen Math Prototype - Stone Counting Garden
+# Zen Math - Multi-Mode Learning System
 
-A minimalist, contemplative approach to teaching math concepts through interactive visual exploration.
+A contemplative, physics-based math learning application for young children. Built with vanilla JavaScript and HTML5 Canvas.
 
-## Concept
+## Project Status
 
-**Stone Counting Garden** is a zen-inspired interactive experience where children explore mathematical concepts through arranging and grouping smooth stones in a virtual garden. No instructions, no scores, no pressure - just natural discovery of patterns and relationships.
+**Phase 1: Foundation Refactor - COMPLETE ✓**
+- Modular architecture established
+- Core systems extracted and organized
+- FreeExplore mode refactored into new architecture
+- Ready for additional mode development
 
-## Learning Goals
+## Architecture
 
-- **Quantity recognition** without counting
-- **Part-whole relationships** (5 stones = 3 + 2 = 4 + 1)
-- **Grouping and ungrouping**
-- **Conservation of number** (same amount, different arrangements)
-- **Visual subitizing** (recognize small quantities instantly)
+### Directory Structure
+```
+zen-math-prototype/
+├── index.html              # Entry point
+├── style.css               # Zen aesthetic styling
+├── app.js                  # Main controller + mode manager
+│
+├── core/                   # Shared systems
+│   ├── Stone.js            # Enhanced stone with mass, physics, structure metadata
+│   └── Renderer.js         # Canvas rendering utilities
+│
+├── modes/                  # Game modes (self-contained)
+│   ├── ModeBase.js         # Abstract base class
+│   └── FreeExploreMode.js  # Current prototype (refactored)
+│
+├── challenges/             # Challenge system (future)
+│   ├── ChallengeEngine.js  # Challenge loader + validator
+│   └── library.js          # Pre-designed challenges
+│
+└── ui/                     # UI components (future)
+    ├── ModeSelector.js     # Mode switching UI
+    └── HintSystem.js       # Non-intrusive hints
+```
+
+### Key Classes
+
+#### Stone (core/Stone.js)
+Enhanced stone class with:
+- **Physics properties**: mass, dragCoefficient, velocity
+- **Structure metadata**: structureId, structureIndex (for NumberStructures mode)
+- **State management**: isDragging, isLocked (for challenges)
+- **Rendering**: Organic shape with shadows, highlights, 3D effect
+
+#### Renderer (core/Renderer.js)
+Canvas rendering utilities:
+- Background rendering with texture
+- Group indicators
+- Connecting lines (for structures)
+- Text rendering
+- Canvas management
+
+#### ModeBase (modes/ModeBase.js)
+Abstract base class for all modes with lifecycle:
+- `init()` - Setup mode
+- `update(deltaTime)` - Game loop
+- `render()` - Draw frame
+- `onPointerDown/Move/Up()` - Handle input
+- `cleanup()` - Teardown
+
+#### FreeExploreMode (modes/FreeExploreMode.js)
+Current prototype refactored:
+- Open-ended discovery
+- Proximity-based grouping
+- Circular stone arrangement
+- Group visualization
+
+#### ModeManager (app.js)
+Central mode controller:
+- Mode registration
+- Mode switching with cleanup
+- Event delegation to current mode
+- Drag state management
+
+## Current Features
+
+✅ **Modular Architecture**
+- Clean separation of concerns
+- Easy to add new modes
+- Shared core systems
+
+✅ **Free Explore Mode**
+- 8 stones in circular arrangement
+- Drag and drop interaction
+- Proximity-based grouping
+- Smooth animations
+
+✅ **Enhanced Stone System**
+- Mass property (for future physics)
+- Structure metadata (for future NumberStructures mode)
+- Lock capability (for future challenges)
+- Organic visual appearance
+
+✅ **Rendering System**
+- Zen aesthetic (earth tones, soft shadows)
+- Subtle textures
+- Group indicators
+- Canvas utilities
+
+
+## Running the Project
+
+### Local Development
+```bash
+# Start a local server
+python3 -m http.server 8080
+
+# Open in browser
+open http://localhost:8080
+```
+
+### Testing Module Loads
+```bash
+# Visit test page
+open http://localhost:8080/test.html
+# Check browser console for module load results
+```
+
+## Next Steps
+
+### Phase 2: Core Systems (Next)
+**Goal:** Build reusable systems for all modes
+
+- [ ] Implement `PhysicsEngine.js`
+  - Mass-based drag resistance
+  - Optional gravity simulation
+  - Collision detection
+
+- [ ] Implement `NumberStructure.js`
+  - Pattern definitions (1-20)
+  - Structure creation + recognition
+  - Combination logic
+
+- [ ] Test systems with demos
+
+### Phase 3: Core Modes
+**Goal:** Implement 3 main modes for validation
+
+- [ ] `NumberStructuresMode.js` - Physical number representations
+- [ ] `BalanceScaleMode.js` - Balance beam mechanics
+- [ ] `StackBalanceMode.js` - Vertical stacking with physics
+
+### Phase 4: Challenge System
+**Goal:** AI-driven challenges
+
+- [ ] Challenge engine
+- [ ] Challenge library (10-15 beginner challenges)
+- [ ] Hint system
+- [ ] Progress tracking
+
+### Phase 5: Polish
+**Goal:** Enhanced UX and aesthetics
+
+- [ ] Smooth mode transitions
+- [ ] Sound design
+- [ ] Extended challenge library
+- [ ] Settings UI
 
 ## Design Philosophy
 
-- **Zen/Minimalist aesthetic** - Simple, beautiful, calming
-- **Intuitive interaction** - No instructions needed, learn by exploring
-- **Daoist approach** - Natural, flowing, discovers patterns through play
-- **Engaging** - Must hold attention while building understanding
+**Zen Contemplative Learning:**
+- No scores, timers, or pressure
+- Subtle feedback and encouragement
+- Physical metaphors for abstract concepts
+- Organic, calming aesthetics
+- Child-led exploration
 
-## How to Use
+**Evidence-Based Design:**
+- Validate with 6-year-old before scaling
+- Measure engagement vs Toca Boca
+- Parent feedback from Burning Man community
+- Iterate based on observation
 
-1. Open `index.html` on iPad/tablet (or desktop browser for testing)
-2. Let the child explore WITHOUT instructions
-3. Watch them discover:
-   - Stones can be dragged around
-   - Stones close together naturally form groups
-   - Groups can be split by dragging apart
-   - Same quantity, infinite arrangements
+**Modular Expansion:**
+- Easy to add new modes
+- Self-contained learning experiences
+- Shared physics and rendering
+- Progressive difficulty
 
-## Testing with Your Daughter
+## Technical Notes
 
-### Setup
-1. Load `index.html` on her iPad
-2. Hand her the tablet
-3. Say nothing (or just "try this")
-4. Step back and observe
+### Module System
+- Uses vanilla JavaScript classes
+- Browser-compatible module pattern
+- No build step required
+- Load order managed in HTML
 
-### What to Watch For
-- ✅ Does she engage immediately?
-- ✅ How long does she play?
-- ✅ Does she discover grouping naturally?
-- ✅ Does she experiment with different arrangements?
-- ✅ Does she ask to play again?
-- ⚠️ Does she ask for Toca Boca instead?
+### Performance
+- RequestAnimationFrame for smooth 60fps
+- Delta time for frame-independent physics
+- Efficient canvas rendering
+- Minimal DOM manipulation
 
-### Key Metrics
-- **Engagement duration** (first session)
-- **Return interest** (asks to play again?)
-- **Learning observable** (groups/splits stones intentionally?)
-- **Comparison** (zen learning vs dopamine-heavy games?)
+### Touch Support
+- Full touch event handling
+- Prevents default behaviors
+- iOS-optimized meta tags
+- No text selection/callouts
 
-## Success Criteria
+## Browser Compatibility
 
-- ✅ Prototype loads and runs smoothly on tablet
-- ✅ Daughter engages without needing explanation
-- ✅ She plays for >5 minutes on first try
-- ✅ Observable learning happening (intentional grouping/splitting)
-- 🎯 **Ultimate test:** Does she ask to play again later?
+- Modern browsers (Chrome, Safari, Firefox, Edge)
+- iOS Safari (primary target - iPad)
+- Android Chrome
+- Desktop browsers for development
 
-## Technical Details
+## Contributing
 
-**Stack:** Vanilla HTML/CSS/JavaScript
-**Rendering:** HTML5 Canvas
-**Interaction:** Touch-first, drag and drop
-**Aesthetics:** Earth tones, organic shapes, smooth animations
+This is a validation-stage prototype. Core development focused on:
+1. Testing core concept with child
+2. Measuring engagement
+3. Validating learning approach
 
-## What This Is NOT
+Expansion decisions pending validation results.
 
-This is a **validation prototype**, not a production app. Goals:
-1. Test core assumption: zen/minimalist learning can engage 6-year-old
-2. Validate with real user (daughter) in real context (tablet)
-3. Gather evidence before building full platform
+## License
 
-## Next Steps (After Testing)
+Private prototype - not yet open source.
 
-**If successful:**
-- Talk to 3-5 other parents (Burning Man community?)
-- Get feedback on concept
-- Plan additional experiences (patterns, balance, etc.)
-- Consider full platform architecture
+---
 
-**If unsuccessful:**
-- Analyze why: aesthetics? interaction? concept?
-- Iterate on prototype
-- Test alternative approaches
-- Or pivot to different solution
-
-## Philosophy
-
-> "The Dao that can be taught is not the eternal Dao"
-
-Math concepts emerge naturally through play and exploration. No drilling, no pressure, just beautiful contemplative learning.
+**Built with:** Vanilla JavaScript, HTML5 Canvas, Love ❤️
+**Target Age:** 6+ years old
+**Inspiration:** Montessori materials, Zen gardens, Toca Boca

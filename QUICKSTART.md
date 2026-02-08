@@ -1,85 +1,292 @@
-# Quick Start Guide
+# Zen Math - Quick Start Guide
 
-## Fastest Path to Testing on iPad
-
-### Option 1: GitHub Pages (Recommended - No Setup)
+## Running the App
 
 ```bash
-cd ~/repos/zen-math-prototype
-
-# Create GitHub repo
-gh repo create zen-math-prototype --public --source=. --remote=origin --push
-
-# Enable GitHub Pages
-gh repo view --web
-# Go to Settings > Pages > Source: main branch > Save
+cd /Users/sergeibenkovitch/repos/zen-math-prototype
+python3 -m http.server 8080
+open http://localhost:8080
 ```
 
-Wait 2-3 minutes, then open on iPad:
-`https://[your-github-username].github.io/zen-math-prototype/`
+## Project Structure
 
-### Option 2: Local Network (Quick Test)
+```
+zen-math-prototype/
+├── core/           # Shared systems (Stone, Renderer)
+├── modes/          # Game modes (ModeBase, FreeExploreMode)
+├── challenges/     # Challenge system (future)
+├── ui/             # UI components (future)
+├── index.html      # Main entry point
+├── app.js          # ModeManager + orchestration
+└── style.css       # Zen aesthetic
+```
 
+## Adding a New Mode
+
+1. Create `modes/YourMode.js`:
+```javascript
+class YourMode extends ModeBase {
+    init() {
+        super.init();
+        // Setup your mode
+    }
+
+    update(deltaTime) {
+        super.update(deltaTime);
+        // Game loop logic
+    }
+
+    render() {
+        this.renderer.drawBackground();
+        // Draw your mode
+        this.stones.forEach(stone => stone.draw(this.ctx));
+    }
+
+    onPointerDown(x, y) {
+        // Handle pointer down
+        return this.findStoneAtPosition(x, y);
+    }
+
+    static getMetadata() {
+        return {
+            id: 'your-mode',
+            name: 'Your Mode',
+            icon: '🎯',
+            description: 'Your mode description'
+        };
+    }
+}
+```
+
+2. Add script tag to `index.html`:
+```html
+<script src="modes/YourMode.js"></script>
+```
+
+3. Register mode in `app.js`:
+```javascript
+modeManager.registerMode(YourMode);
+```
+
+4. Switch to your mode:
+```javascript
+modeManager.switchMode('your-mode');
+```
+
+## Key Classes
+
+### Stone (core/Stone.js)
+```javascript
+// Create a stone
+const stone = new Stone(x, y, id, {
+    radius: 35,
+    color: '#8b7d6b',
+    mass: 1.0,
+    isLocked: false
+});
+
+// Draw it
+stone.draw(ctx);
+
+// Update it
+stone.update(deltaTime);
+
+// Check if point is inside
+if (stone.contains(x, y)) { ... }
+
+// Get distance to another stone
+const dist = stone.distanceTo(otherStone);
+```
+
+### Renderer (core/Renderer.js)
+```javascript
+// Draw background
+renderer.drawBackground();
+
+// Draw group indicator
+renderer.drawGroupIndicator(stones);
+
+// Draw connecting lines
+renderer.drawConnectingLines(stones);
+
+// Draw text
+renderer.drawText('Hello', x, y, { fontSize: 20 });
+
+// Get canvas center
+const { x, y } = renderer.getCenter();
+```
+
+### ModeBase (modes/ModeBase.js)
+```javascript
+// Find stone at position
+const stone = this.findStoneAtPosition(x, y);
+
+// Move stone to top
+this.moveStoneToTop(stone);
+
+// Add/remove stones
+this.addStone(stone);
+this.removeStone(stone);
+```
+
+## Testing
+
+### Manual Test
 ```bash
-cd ~/repos/zen-math-prototype
-
-# Start simple HTTP server
-python3 -m http.server 8000
+open http://localhost:8080
+# Drag stones around
+# Verify grouping works
 ```
 
-Find your computer's IP:
+### Module Load Test
 ```bash
-ifconfig | grep "inet " | grep -v 127.0.0.1
+open http://localhost:8080/test.html
+# Check console for module load results
 ```
 
-On iPad, open Safari and go to:
-`http://[your-ip]:8000/index.html`
+### Console Testing
+```javascript
+// Check current mode
+modeManager.getCurrentMode()
 
-### Option 3: AirDrop (Offline)
+// Check stones
+modeManager.getCurrentMode().stones
 
-1. Select all files in Finder
-2. AirDrop to iPad
-3. On iPad, open Files app
-4. Tap `index.html`
-5. Choose "Safari"
-
-## Desktop Testing First
-
-Before testing with daughter, verify it works:
-
-```bash
-cd ~/repos/zen-math-prototype
-open index.html
+// Switch modes (when available)
+modeManager.switchMode('mode-id')
 ```
 
-You should see:
-- Sand-colored zen garden background
-- 8 organic-shaped stones in earthy colors
-- Smooth dragging with mouse
-- Subtle grouping effect when stones are close
+## Development Workflow
 
-## Troubleshooting
+1. **Start server:** `python3 -m http.server 8080`
+2. **Open browser:** `http://localhost:8080`
+3. **Make changes** to JS files
+4. **Refresh browser** (no build step!)
+5. **Check console** for errors
 
-**Stones don't move:**
-- Check browser console (F12) for errors
-- Try different browser (Chrome/Safari/Firefox)
+## Next Phase: Core Systems
 
-**Grouping doesn't show:**
-- Drag stones closer together (within ~80px)
-- Should see subtle oval indicator
+Ready to implement:
 
-**Touch doesn't work on iPad:**
-- Make sure you're using Safari (best iOS support)
-- Check that `user-scalable=no` is in viewport meta tag
-- Verify no JavaScript errors in Safari dev tools
+### PhysicsEngine.js
+```javascript
+class PhysicsEngine {
+    applyGravity(stone, deltaTime) { ... }
+    checkCollision(stone1, stone2) { ... }
+    applyDrag(stone, coefficient) { ... }
+}
+```
 
-**Performance issues:**
-- Reduce number of stones in `app.js` (change `initialCount`)
-- Lower animation detail (increase `ease` value in update function)
+### NumberStructure.js
+```javascript
+class NumberStructure {
+    constructor(value) { ... }
+    createStones(centerX, centerY) { ... }
+    isIntact() { ... }
+    merge(other) { ... }
+}
+```
 
-## Next Steps After First Test
+## Common Tasks
 
-1. Capture observations in `TESTING.md`
-2. If successful: show to 3-5 other parents
-3. If needs iteration: note what to improve
-4. If validation passes: plan next learning experience
+### Change stone count
+Edit `FreeExploreMode.js`, line ~28:
+```javascript
+const initialCount = 8; // Change this number
+```
+
+### Change grouping threshold
+Edit `FreeExploreMode.js`, line ~4:
+```javascript
+const GROUP_THRESHOLD = 80; // Change distance
+```
+
+### Change colors
+Edit `core/Stone.js`, lines 18-23:
+```javascript
+const COLORS = {
+    stone: ['#8b7d6b', ...], // Add more colors
+    ...
+};
+```
+
+### Add mode-specific styling
+Add to `style.css`:
+```css
+.mode-specific-class {
+    /* Your styles */
+}
+```
+
+## Debugging
+
+### Enable console logging
+Add to mode's update():
+```javascript
+update(deltaTime) {
+    console.log('Mode active:', this.stones.length);
+    super.update(deltaTime);
+}
+```
+
+### Check rendering
+Add to mode's render():
+```javascript
+render() {
+    console.log('Rendering frame');
+    this.renderer.drawBackground();
+    // ...
+}
+```
+
+### Inspect stones
+In console:
+```javascript
+const stones = modeManager.getCurrentMode().stones;
+stones.forEach(s => console.log(s.x, s.y, s.mass));
+```
+
+## Performance Tips
+
+- Keep update() logic minimal
+- Batch similar draw operations
+- Use requestAnimationFrame (already set up)
+- Avoid creating objects in render()
+- Cache calculations when possible
+
+## Documentation
+
+- **README.md** - Full architecture docs
+- **IMPLEMENTATION_LOG.md** - Phase tracking
+- **PHASE1_SUMMARY.md** - Phase 1 details
+- **PHASE1_VERIFICATION.md** - Testing checklist
+
+## Getting Help
+
+Check these files for detailed information:
+- Architecture questions → README.md
+- Implementation questions → IMPLEMENTATION_LOG.md
+- Testing questions → PHASE1_VERIFICATION.md
+- Phase status → PHASE1_SUMMARY.md
+
+## Quick Reference
+
+| Task | Command |
+|------|---------|
+| Start server | `python3 -m http.server 8080` |
+| Open app | `open http://localhost:8080` |
+| Test modules | `open http://localhost:8080/test.html` |
+| Check mode | `modeManager.getCurrentMode()` |
+| List modes | `modeManager.modes` |
+
+## Current Status
+
+- ✅ Phase 1: Foundation Refactor - COMPLETE
+- ⏳ Phase 2: Core Systems - READY TO START
+- 📋 Phase 3: Core Modes - PLANNED
+- 📋 Phase 4: Challenge System - PLANNED
+- 📋 Phase 5: Polish - PLANNED
+
+---
+
+**Happy Coding! 🎨🪨**

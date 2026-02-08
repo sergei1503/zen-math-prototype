@@ -5,13 +5,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>Stone Counting Garden</title>
+    <title>Zen Math - Stone Counting Garden</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div id="garden-container">
         <canvas id="garden-canvas"></canvas>
     </div>
+
+    <!-- Core modules -->
+    <script src="core/Stone.js"></script>
+    <script src="core/Renderer.js"></script>
+
+    <!-- Mode base class -->
+    <script src="modes/ModeBase.js"></script>
+
+    <!-- Game modes -->
+    <script src="modes/FreeExploreMode.js"></script>
+
+    <!-- Main application -->
     <script src="app.js"></script>
 </body>
 </html>
