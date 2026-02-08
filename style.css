@@ -1,0 +1,50 @@
+/* Zen Math - Stone Counting Garden */
+/* Minimalist, calming, intuitive */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    background: linear-gradient(135deg, #e8dcc4 0%, #d4c5ab 100%);
+    /* Soft sand gradient - warm earth tones */
+    touch-action: none;
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+#garden-container {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#garden-canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    cursor: grab;
+}
+
+#garden-canvas:active {
+    cursor: grabbing;
+}
+
+/* Prevent text selection and touch callouts on iOS */
+body {
+    -webkit-touch-callout: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* Smooth animations throughout */
+* {
+    transition: opacity 0.3s ease;
+}
