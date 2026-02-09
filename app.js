@@ -1,6 +1,32 @@
 // Zen Math - Main Application Controller
 // Multi-mode learning system with mode management
 
+// Polyfill for roundRect (Safari/older browsers)
+if (!CanvasRenderingContext2D.prototype.roundRect) {
+    CanvasRenderingContext2D.prototype.roundRect = function(x, y, width, height, radius) {
+        if (typeof radius === 'undefined') {
+            radius = 5;
+        }
+        if (typeof radius === 'number') {
+            radius = {tl: radius, tr: radius, br: radius, bl: radius};
+        } else {
+            radius = {tl: radius, tr: radius, br: radius, bl: radius};
+        }
+        this.beginPath();
+        this.moveTo(x + radius.tl, y);
+        this.lineTo(x + width - radius.tr, y);
+        this.quadraticCurveTo(x + width, y, x + width, y + radius.tr);
+        this.lineTo(x + width, y + height - radius.br);
+        this.quadraticCurveTo(x + width, y + height, x + width - radius.br, y + height);
+        this.lineTo(x + radius.bl, y + height);
+        this.quadraticCurveTo(x, y + height, x, y + height - radius.bl);
+        this.lineTo(x, y + radius.tl);
+        this.quadraticCurveTo(x, y, x + radius.tl, y);
+        this.closePath();
+        return this;
+    };
+}
+
 const canvas = document.getElementById('garden-canvas');
 const ctx = canvas.getContext('2d');
 
