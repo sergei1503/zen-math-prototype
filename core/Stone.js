@@ -1,12 +1,17 @@
 // Stone class - Enhanced for multi-mode physics
 // Represents a draggable stone with physics properties
 
-const STONE_RADIUS = 35; // Base size for stones
-const COLORS = {
+// Global constants (accessible from other modules)
+window.STONE_RADIUS = 35; // Base size for stones
+window.COLORS = {
     stone: ['#8b7d6b', '#9a8c7a', '#7a6f5d', '#6b6152', '#a39482'],
     stoneHighlight: '#b8a894',
     shadow: 'rgba(0, 0, 0, 0.15)'
 };
+
+// Local aliases for convenience within this file
+const STONE_RADIUS = window.STONE_RADIUS;
+const COLORS = window.COLORS;
 
 class Stone {
     constructor(x, y, id, properties = {}) {
