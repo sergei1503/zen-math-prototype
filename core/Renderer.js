@@ -10,11 +10,11 @@ class Renderer {
     // Clear canvas and draw zen background
     drawBackground() {
         const ctx = this.ctx;
-        const canvas = this.canvas;
+        const {width, height} = this.getDimensions();
 
         // Base sand color gradient
         ctx.fillStyle = '#e8dcc4';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillRect(0, 0, width, height);
 
         // Draw subtle sand texture
         ctx.save();
@@ -22,8 +22,8 @@ class Renderer {
         for (let i = 0; i < 100; i++) {
             ctx.fillStyle = Math.random() > 0.5 ? '#d4c5ab' : '#f0e6d2';
             ctx.fillRect(
-                Math.random() * canvas.width,
-                Math.random() * canvas.height,
+                Math.random() * width,
+                Math.random() * height,
                 2, 2
             );
         }
@@ -124,25 +124,31 @@ class Renderer {
         ctx.restore();
     }
 
-    // Resize canvas to window
+    // Resize canvas to window (with HiDPI/Retina support)
     resize() {
-        this.canvas.width = window.innerWidth;
-        this.canvas.height = window.innerHeight;
+        const dpr = window.devicePixelRatio || 1;
+        this.canvas.width = window.innerWidth * dpr;
+        this.canvas.height = window.innerHeight * dpr;
+        this.canvas.style.width = window.innerWidth + 'px';
+        this.canvas.style.height = window.innerHeight + 'px';
+        this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     }
 
-    // Get center point of canvas
+    // Get center point of canvas (logical/CSS coordinates)
     getCenter() {
+        const dpr = window.devicePixelRatio || 1;
         return {
-            x: this.canvas.width / 2,
-            y: this.canvas.height / 2
+            x: this.canvas.width / dpr / 2,
+            y: this.canvas.height / dpr / 2
         };
     }
 
-    // Get canvas dimensions
+    // Get canvas dimensions (logical/CSS coordinates)
     getDimensions() {
+        const dpr = window.devicePixelRatio || 1;
         return {
-            width: this.canvas.width,
-            height: this.canvas.height
+            width: this.canvas.width / dpr,
+            height: this.canvas.height / dpr
         };
     }
 }

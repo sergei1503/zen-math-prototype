@@ -92,8 +92,14 @@ class ModeManager {
     // Get event position (handles both mouse and touch)
     getEventPosition(e) {
         const rect = canvas.getBoundingClientRect();
-        const x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
-        const y = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+        // Use changedTouches for touchend (touches is empty when finger lifts)
+        const source = e.touches && e.touches.length > 0 ? e.touches[0]
+            : e.changedTouches && e.changedTouches.length > 0 ? e.changedTouches[0]
+            : e;
+        const x = (source.clientX - rect.left) * scaleX;
+        const y = (source.clientY - rect.top) * scaleY;
         return {x, y};
     }
 
@@ -183,9 +189,9 @@ let hasInteractionThisFrame = false;
 canvas.addEventListener('mousedown', (e) => { hasInteractionThisFrame = true; modeManager.onPointerDown(e); });
 canvas.addEventListener('mousemove', (e) => { if (modeManager.draggedStone) hasInteractionThisFrame = true; modeManager.onPointerMove(e); });
 canvas.addEventListener('mouseup', (e) => { hasInteractionThisFrame = true; modeManager.onPointerUp(e); challengeEngine.checkGoals(); });
-canvas.addEventListener('touchstart', (e) => { hasInteractionThisFrame = true; modeManager.onPointerDown(e); });
-canvas.addEventListener('touchmove', (e) => { if (modeManager.draggedStone) hasInteractionThisFrame = true; modeManager.onPointerMove(e); });
-canvas.addEventListener('touchend', (e) => { hasInteractionThisFrame = true; modeManager.onPointerUp(e); challengeEngine.checkGoals(); });
+canvas.addEventListener('touchstart', (e) => { hasInteractionThisFrame = true; modeManager.onPointerDown(e); }, { passive: false });
+canvas.addEventListener('touchmove', (e) => { if (modeManager.draggedStone) hasInteractionThisFrame = true; modeManager.onPointerMove(e); }, { passive: false });
+canvas.addEventListener('touchend', (e) => { hasInteractionThisFrame = true; modeManager.onPointerUp(e); challengeEngine.checkGoals(); }, { passive: false });
 window.addEventListener('blur', () => modeManager.onBlur());
 
 // Animation loop
@@ -200,11 +206,12 @@ function animate(currentTime) {
         mode.render();
 
         // Update and render hint system
+        const dpr = window.devicePixelRatio || 1;
         hintSystem.update(deltaTime, hasInteractionThisFrame);
-        hintSystem.render(ctx, canvas.width, canvas.height);
+        hintSystem.render(ctx, canvas.width / dpr, canvas.height / dpr);
 
-        // Render challenge overlay
-        challengeEngine.render(ctx, canvas);
+        // Render challenge overlay (pass logical dimensions)
+        challengeEngine.render(ctx, { width: canvas.width / dpr, height: canvas.height / dpr });
     }
 
     hasInteractionThisFrame = false;
