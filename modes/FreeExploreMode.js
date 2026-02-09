@@ -15,11 +15,11 @@ const CENTRAL_BLACK_HOLE_MASS = 50;
 const CENTRAL_BLACK_HOLE_RADIUS = 40;
 const GRAVITATIONAL_CONSTANT = 300; // Tuned for fun physics
 const DAMPING = 0.995; // Air resistance (0.995 = very little drag)
-const BTN_BG = 'rgba(139, 125, 107, 0.15)';
-const BTN_BG_ACTIVE = 'rgba(139, 125, 107, 0.3)';
-const BTN_BORDER = 'rgba(139, 125, 107, 0.3)';
-const BTN_TEXT = 'rgba(107, 97, 82, 0.7)';
-const BTN_RADIUS = 10;
+const FREE_BTN_BG = 'rgba(139, 125, 107, 0.15)';
+const FREE_BTN_BG_ACTIVE = 'rgba(139, 125, 107, 0.3)';
+const FREE_BTN_BORDER = 'rgba(139, 125, 107, 0.3)';
+const FREE_BTN_TEXT = 'rgba(107, 97, 82, 0.7)';
+const FREE_BTN_RADIUS = 10;
 
 class StoneGroup {
     constructor(stones) {
@@ -39,6 +39,7 @@ class CentralBlackHole {
         this.mass = CENTRAL_BLACK_HOLE_MASS;
         this.radius = CENTRAL_BLACK_HOLE_RADIUS;
         this.gravitationalStrength = GRAVITATIONAL_CONSTANT;
+        this.gravitationalRadius = CENTRAL_BLACK_HOLE_RADIUS * 4; // Influence area
     }
 
     applyGravityTo(stone, deltaTime) {
@@ -499,17 +500,17 @@ class FreeExploreMode extends ModeBase {
         ctx.save();
 
         // Background
-        ctx.fillStyle = btn.active ? BTN_BG_ACTIVE : BTN_BG;
-        ctx.strokeStyle = BTN_BORDER;
+        ctx.fillStyle = btn.active ? FREE_BTN_BG_ACTIVE : FREE_BTN_BG;
+        ctx.strokeStyle = FREE_BTN_BORDER;
         ctx.lineWidth = 1;
         ctx.beginPath();
-        ctx.roundRect(btn.x, btn.y, btn.width, btn.height, BTN_RADIUS);
+        ctx.roundRect(btn.x, btn.y, btn.width, btn.height, FREE_BTN_RADIUS);
         ctx.fill();
         ctx.stroke();
 
         // Label
         ctx.font = '13px -apple-system, BlinkMacSystemFont, sans-serif';
-        ctx.fillStyle = BTN_TEXT;
+        ctx.fillStyle = FREE_BTN_TEXT;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText(btn.label, btn.x + btn.width / 2, btn.y + btn.height / 2);

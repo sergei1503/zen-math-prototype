@@ -16,11 +16,11 @@ const PAN_BORDER_COLOR = 'rgba(139, 125, 107, 0.5)';
 const TRAY_Y_OFFSET = 80; // Distance from top for the stone tray
 
 // Button styling constants
-const BTN_BG = 'rgba(139, 125, 107, 0.15)';
-const BTN_BG_ACTIVE = 'rgba(139, 125, 107, 0.3)';
-const BTN_BORDER = 'rgba(139, 125, 107, 0.3)';
-const BTN_TEXT = 'rgba(107, 97, 82, 0.7)';
-const BTN_RADIUS = 10;
+const BALANCE_BTN_BG = 'rgba(139, 125, 107, 0.15)';
+const BALANCE_BTN_BG_ACTIVE = 'rgba(139, 125, 107, 0.3)';
+const BALANCE_BTN_BORDER = 'rgba(139, 125, 107, 0.3)';
+const BALANCE_BTN_TEXT = 'rgba(107, 97, 82, 0.7)';
+const BALANCE_BTN_RADIUS = 10;
 
 // Difficulty settings
 const DIFFICULTY_LEVELS = {
@@ -559,17 +559,17 @@ class BalanceScaleMode extends ModeBase {
         ctx.save();
 
         // Background
-        ctx.fillStyle = btn.active ? BTN_BG_ACTIVE : BTN_BG;
-        ctx.strokeStyle = BTN_BORDER;
+        ctx.fillStyle = btn.active ? BALANCE_BTN_BG_ACTIVE : BALANCE_BTN_BG;
+        ctx.strokeStyle = BALANCE_BTN_BORDER;
         ctx.lineWidth = 1;
         ctx.beginPath();
-        ctx.roundRect(btn.x, btn.y, btn.width, btn.height, BTN_RADIUS);
+        ctx.roundRect(btn.x, btn.y, btn.width, btn.height, BALANCE_BTN_RADIUS);
         ctx.fill();
         ctx.stroke();
 
         // Label
         ctx.font = '13px -apple-system, BlinkMacSystemFont, sans-serif';
-        ctx.fillStyle = BTN_TEXT;
+        ctx.fillStyle = BALANCE_BTN_TEXT;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText(btn.label, btn.x + btn.width / 2, btn.y + btn.height / 2);
