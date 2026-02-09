@@ -469,7 +469,6 @@ class FreeExploreMode extends ModeBase {
         // Remove absorbed stones
         toRemove.forEach(stone => this.removeStone(stone));
     }
-    }
 
     render() {
         // Draw background
