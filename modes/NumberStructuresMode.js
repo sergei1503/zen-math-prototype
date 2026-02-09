@@ -1,5 +1,5 @@
 // NumberStructuresMode - Numbers as physical stone arrangements
-// Teaches visual number sense, addition through combination, decomposition
+// Enhanced: loosened recognition, group dragging, better number visibility
 
 // Canonical patterns for numbers (offsets from center, spacing ~50px)
 const NUMBER_PATTERNS = {
@@ -19,19 +19,28 @@ const NUMBER_PATTERNS = {
          {x: -50, y: 25}, {x: -25, y: 25}, {x: 0, y: 25}, {x: 25, y: 25}, {x: 50, y: 25}]
 };
 
-const STRUCTURE_MERGE_DISTANCE = 120;
-const PATTERN_RECOGNITION_THRESHOLD = 40;
-const STRUCTURE_LINE_COLOR = 'rgba(139, 125, 107, 0.25)';
+const STRUCTURE_MERGE_DISTANCE = 160; // Increased from 120
+const PATTERN_RECOGNITION_THRESHOLD = 60; // Increased from 40
+const STRUCTURE_LINE_COLOR = 'rgba(139, 125, 107, 0.35)'; // More visible lines
 const GHOST_COLOR = 'rgba(139, 125, 107, 0.08)';
 const GLOW_COLOR = 'rgba(180, 165, 140, 0.4)';
+const NUMBER_LABEL_COLOR = '#8B4513';
+const NUMBER_LABEL_BG = 'rgba(232, 220, 196, 0.85)';
 
 class NumberStructuresMode extends ModeBase {
     constructor(canvas, ctx, renderer) {
         super(canvas, ctx, renderer);
         this.structures = []; // Array of {id, value, stones, centerX, centerY, intact}
-        this.recognizedPatterns = []; // {value, x, y, time} for glow effects
+        this.recognizedPatterns = []; // {value, x, y, time, scale} for glow + number animation
         this.nextStructureId = 0;
         this.nextStoneId = 0;
+
+        // Group drag state
+        this._dragGroup = null; // { structure, offsets: [{stone, dx, dy}] }
+        this._groupGlowTime = 0;
+
+        // Extract gesture state
+        this._extractPending = null; // { stone, structure, startX, startY, startTime }
     }
 
     init() {
@@ -129,8 +138,8 @@ class NumberStructuresMode extends ModeBase {
             totalError += bestDist;
         }
 
-        // Average error must be reasonable
-        if (totalError / stones.length > PATTERN_RECOGNITION_THRESHOLD * 0.7) return null;
+        // Average error must be reasonable (loosened from 0.7 to 0.85)
+        if (totalError / stones.length > PATTERN_RECOGNITION_THRESHOLD * 0.85) return null;
 
         return stones.length;
     }
@@ -222,12 +231,13 @@ class NumberStructuresMode extends ModeBase {
                         });
                     }
 
-                    // Add recognition glow
+                    // Add recognition glow with scale animation
                     this.recognizedPatterns.push({
                         value: newValue,
                         x: midX,
                         y: midY,
-                        time: 2.0
+                        time: 2.0,
+                        scale: 2.0 // Start large, settle to 1.0
                     });
 
                     return true;
@@ -237,12 +247,101 @@ class NumberStructuresMode extends ModeBase {
         return false;
     }
 
+    _autoFormRemainingStones(structure, removedStone) {
+        // Get remaining stones (exclude extracted one)
+        const remaining = structure.stones.filter(s => s !== removedStone);
+
+        if (remaining.length === 0) {
+            // No stones left, just clean up
+            structure.stones = [];
+            structure.intact = false;
+            return;
+        }
+
+        // Remove the extracted stone from the structure's stone list
+        structure.stones = remaining;
+
+        // Check if a pattern exists for the remaining count
+        const pattern = NUMBER_PATTERNS[remaining.length];
+        if (pattern && remaining.length >= 1) {
+            // Calculate centroid of remaining stones
+            const center = this._getStructureCenter(remaining);
+
+            // Create a new structure at centroid
+            const structureId = this.nextStructureId++;
+            remaining.forEach((stone, idx) => {
+                stone.structureId = structureId;
+                stone.structureIndex = idx;
+                stone.setTarget(center.x + pattern[idx].x, center.y + pattern[idx].y);
+            });
+
+            // Update the existing structure in place
+            structure.id = structureId;
+            structure.value = remaining.length;
+            structure.centerX = center.x;
+            structure.centerY = center.y;
+            structure.intact = true;
+
+            // Show recognition glow
+            this.recognizedPatterns.push({
+                value: remaining.length,
+                x: center.x,
+                y: center.y,
+                time: 2.0,
+                scale: 2.0
+            });
+        } else {
+            // No valid pattern for this count, mark as broken
+            structure.intact = false;
+        }
+    }
+
+    // Initialize with a specific configuration for challenges
+    initWithConfiguration(config) {
+        // Clear existing stones and structures
+        this.stones.forEach(s => this.removeStone(s));
+        this.stones = [];
+        this.structures = [];
+        this.recognizedPatterns = [];
+
+        const center = this.renderer.getCenter();
+
+        if (config.structures) {
+            config.structures.forEach((structConfig, idx) => {
+                const offsetX = structConfig.offsetX || 0;
+                const offsetY = structConfig.offsetY || 0;
+                this._createStructure(structConfig.value, center.x + offsetX, center.y + offsetY);
+            });
+        }
+
+        if (config.looseStones) {
+            config.looseStones.forEach((stoneConfig, idx) => {
+                const stone = new Stone(
+                    center.x + (stoneConfig.offsetX || 0),
+                    center.y + (stoneConfig.offsetY || 0),
+                    this.nextStoneId++
+                );
+                this.addStone(stone);
+            });
+        }
+    }
+
     update(deltaTime) {
         super.update(deltaTime);
 
-        // Update structure states
+        // Update group glow timer
+        if (this._dragGroup) {
+            this._groupGlowTime += deltaTime;
+        } else {
+            this._groupGlowTime = 0;
+        }
+
+        // Update structure states (but not for the group being dragged)
         this.structures.forEach(structure => {
             if (structure.stones.length > 0) {
+                // Skip integrity check for structure being group-dragged
+                if (this._dragGroup && this._dragGroup.structure === structure) return;
+
                 structure.intact = this._checkStructureIntact(structure);
                 if (structure.intact) {
                     const center = this._getStructureCenter(structure.stones);
@@ -252,9 +351,13 @@ class NumberStructuresMode extends ModeBase {
             }
         });
 
-        // Fade recognition glow effects
+        // Fade recognition glow effects + animate scale
         this.recognizedPatterns = this.recognizedPatterns.filter(p => {
             p.time -= deltaTime;
+            // Scale settles from 2.0 to 1.0 over first 0.5s
+            if (p.scale > 1.0) {
+                p.scale = Math.max(1.0, p.scale - deltaTime * 4);
+            }
             return p.time > 0;
         });
 
@@ -287,12 +390,29 @@ class NumberStructuresMode extends ModeBase {
             }
         });
 
-        // Draw connecting lines for intact structures
+        // Draw connecting lines for intact structures (thicker, more visible)
         this.structures.forEach(structure => {
             if (structure.intact && structure.stones.length >= 2) {
-                this.renderer.drawConnectingLines(structure.stones, STRUCTURE_LINE_COLOR, 1.5);
+                this.renderer.drawConnectingLines(structure.stones, STRUCTURE_LINE_COLOR, 2.5);
             }
         });
+
+        // Draw group drag glow effect
+        if (this._dragGroup) {
+            const pulse = 0.5 + 0.3 * Math.sin(this._groupGlowTime * 4);
+            this._dragGroup.structure.stones.forEach(stone => {
+                ctx.save();
+                const glowRadius = stone.radius + 8;
+                const gradient = ctx.createRadialGradient(stone.x, stone.y, stone.radius * 0.8, stone.x, stone.y, glowRadius);
+                gradient.addColorStop(0, `rgba(180, 165, 140, ${0.3 * pulse})`);
+                gradient.addColorStop(1, 'rgba(180, 165, 140, 0)');
+                ctx.fillStyle = gradient;
+                ctx.beginPath();
+                ctx.arc(stone.x, stone.y, glowRadius, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            });
+        }
 
         // Draw recognition glow effects
         this.recognizedPatterns.forEach(p => {
@@ -312,43 +432,156 @@ class NumberStructuresMode extends ModeBase {
         // Draw all stones
         this.stones.forEach(stone => stone.draw(ctx));
 
-        // Draw number labels near intact structures
+        // Draw number labels near intact structures (enhanced visibility)
         this.structures.forEach(structure => {
             if (structure.intact) {
-                this.renderer.drawCountIndicator(
-                    structure.value,
-                    structure.centerX,
-                    structure.centerY - 55
-                );
+                this._drawNumberLabel(structure.value, structure.centerX, structure.centerY - 55);
             }
         });
+
+        // Draw animated number labels for recently recognized patterns
+        this.recognizedPatterns.forEach(p => {
+            const alpha = Math.min(1, p.time / 1.5);
+            const scale = p.scale || 1.0;
+            this._drawNumberLabel(p.value, p.x, p.y - 55, alpha, scale);
+        });
+    }
+
+    _drawNumberLabel(value, x, y, alpha = 1.0, scale = 1.0) {
+        const ctx = this.ctx;
+        ctx.save();
+
+        const fontSize = Math.round(28 * scale);
+        const text = value.toString();
+
+        ctx.font = `bold ${fontSize}px -apple-system, BlinkMacSystemFont, sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+
+        // Measure text for background pill
+        const metrics = ctx.measureText(text);
+        const pillWidth = metrics.width + 20;
+        const pillHeight = fontSize + 10;
+
+        // Background pill
+        ctx.fillStyle = `rgba(232, 220, 196, ${0.85 * alpha})`;
+        ctx.beginPath();
+        ctx.roundRect(x - pillWidth / 2, y - pillHeight / 2, pillWidth, pillHeight, pillHeight / 2);
+        ctx.fill();
+
+        // Number text
+        ctx.fillStyle = `rgba(139, 69, 19, ${alpha})`; // Saddlebrown
+        ctx.fillText(text, x, y);
+
+        ctx.restore();
     }
 
     onPointerDown(x, y) {
         const stone = this.findStoneAtPosition(x, y);
         if (stone) {
-            stone.startDrag();
-            this.moveStoneToTop(stone);
+            // Check if this stone is part of an intact structure
+            const structure = this.structures.find(s => s.intact && s.stones.includes(stone));
 
-            // If dragged stone was part of a structure, mark it as broken
-            const structure = this.structures.find(s => s.stones.includes(stone));
             if (structure) {
-                structure.intact = false;
-            }
+                // Start as group drag, but track for potential extraction
+                const offsets = structure.stones.map(s => ({
+                    stone: s,
+                    dx: s.x - x,
+                    dy: s.y - y
+                }));
 
-            return stone;
+                this._dragGroup = { structure, offsets };
+                this._extractPending = {
+                    stone: stone,
+                    structure: structure,
+                    startX: x,
+                    startY: y,
+                    startTime: Date.now()
+                };
+
+                // Start drag on all stones in the group
+                structure.stones.forEach(s => s.startDrag());
+                structure.stones.forEach(s => this.moveStoneToTop(s));
+
+                return stone;
+            } else {
+                // Single stone drag (not part of intact structure)
+                stone.startDrag();
+                this.moveStoneToTop(stone);
+
+                // Mark any structure containing this stone as broken
+                const parentStructure = this.structures.find(s => s.stones.includes(stone));
+                if (parentStructure) {
+                    parentStructure.intact = false;
+                }
+
+                return stone;
+            }
         }
         return null;
     }
 
     onPointerMove(x, y, draggedStone) {
-        if (draggedStone) {
+        // Check if we should convert from group drag to single-stone extraction
+        if (this._extractPending && this._dragGroup) {
+            const ep = this._extractPending;
+            const dx = x - ep.startX;
+            const dy = y - ep.startY;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            const elapsed = Date.now() - ep.startTime;
+
+            if (elapsed > 300 && dist > 15) {
+                // Convert to extraction: stop dragging all other stones
+                const extractedStone = ep.stone;
+                const structure = ep.structure;
+
+                // Stop drag on all group stones except the extracted one
+                structure.stones.forEach(s => {
+                    if (s !== extractedStone) {
+                        s.stopDrag();
+                    }
+                });
+
+                // Auto-form remaining stones
+                this._autoFormRemainingStones(structure, extractedStone);
+
+                // Clear group drag state
+                this._dragGroup = null;
+                this._extractPending = null;
+
+                // Continue dragging only the extracted stone
+                extractedStone.setPosition(x, y);
+                return;
+            }
+        }
+
+        if (this._dragGroup) {
+            // Move all stones in the group maintaining relative positions
+            this._dragGroup.offsets.forEach(({ stone, dx, dy }) => {
+                stone.setPosition(x + dx, y + dy);
+            });
+        } else if (draggedStone) {
             draggedStone.setPosition(x, y);
         }
     }
 
     onPointerUp(x, y, draggedStone) {
-        if (draggedStone) {
+        // Clear extract pending state
+        this._extractPending = null;
+
+        if (this._dragGroup) {
+            // Stop dragging all group stones
+            this._dragGroup.structure.stones.forEach(s => s.stopDrag());
+
+            // Re-check if structure is still intact after moving
+            const structure = this._dragGroup.structure;
+            const center = this._getStructureCenter(structure.stones);
+            structure.centerX = center.x;
+            structure.centerY = center.y;
+            // Structure stays intact since we moved it as a unit
+
+            this._dragGroup = null;
+        } else if (draggedStone) {
             draggedStone.stopDrag();
         }
 
@@ -391,12 +624,13 @@ class NumberStructuresMode extends ModeBase {
                     intact: true
                 });
 
-                // Add recognition glow
+                // Add recognition glow with scale animation
                 this.recognizedPatterns.push({
                     value: value,
                     x: center.x,
                     y: center.y,
-                    time: 2.0
+                    time: 2.0,
+                    scale: 2.0
                 });
             }
         });
@@ -411,6 +645,9 @@ class NumberStructuresMode extends ModeBase {
         this.recognizedPatterns = [];
         this.nextStructureId = 0;
         this.nextStoneId = 0;
+        this._dragGroup = null;
+        this._groupGlowTime = 0;
+        this._extractPending = null;
     }
 
     static getMetadata() {

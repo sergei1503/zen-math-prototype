@@ -82,13 +82,61 @@ const CHALLENGE_LIBRARY = [
         id: 'struct-004',
         mode: 'number-structures',
         title: 'Break Apart Eight',
-        hint: 'Start with eight and split it into two smaller numbers',
+        hint: 'Start with eight and split it into two parts that still add up',
         difficulty: 3,
         concepts: ['decomposition', 'part-whole'],
         goals: [
-            { type: 'structure-formed', value: 8 },
-            { type: 'all-stones-used' }
-        ]
+            { type: 'structure-count', minCount: 2 },
+            { type: 'structures-sum-to', targetSum: 8 }
+        ],
+        initialConfig: {
+            structures: [{ value: 8, offsetX: 0, offsetY: 0 }]
+        }
+    },
+    {
+        id: 'struct-005',
+        mode: 'number-structures',
+        title: 'Split the Eight',
+        hint: 'Start with 8, make a 5 and a 3',
+        difficulty: 3,
+        concepts: ['decomposition', 'part-whole'],
+        goals: [
+            { type: 'structure-formed', value: 5 },
+            { type: 'structure-formed', value: 3 }
+        ],
+        initialConfig: {
+            structures: [{ value: 8, offsetX: 0, offsetY: 0 }]
+        }
+    },
+    {
+        id: 'struct-006',
+        mode: 'number-structures',
+        title: 'Perfect Halves',
+        hint: 'Start with 10, split into two equal fives',
+        difficulty: 3,
+        concepts: ['decomposition', 'halving', 'equality'],
+        goals: [
+            { type: 'structure-formed', value: 5 },
+            { type: 'structure-count', minCount: 2 }
+        ],
+        initialConfig: {
+            structures: [{ value: 10, offsetX: 0, offsetY: 0 }]
+        }
+    },
+    {
+        id: 'struct-007',
+        mode: 'number-structures',
+        title: 'Three Ways',
+        hint: 'Break 8 into three different structures',
+        difficulty: 4,
+        concepts: ['decomposition', 'multiple-representations'],
+        goals: [
+            { type: 'structure-count', minCount: 3 },
+            { type: 'structures-sum-to', targetSum: 8 }
+        ],
+        initialConfig: {
+            structures: [{ value: 8, offsetX: 0, offsetY: 0 }]
+        }
     },
 
     // =============================================================
@@ -188,6 +236,42 @@ const CHALLENGE_LIBRARY = [
         goals: [
             { type: 'stack-height', minHeight: 4 },
             { type: 'all-stones-used' }
+        ]
+    },
+    {
+        id: 'stack-005',
+        mode: 'stack-balance',
+        title: 'Perfectly Centered',
+        hint: 'Stack 5 stones with the center of mass right above the platform center',
+        difficulty: 3,
+        concepts: ['spatial', 'center-of-mass', 'symmetry'],
+        goals: [
+            { type: 'stack-height', minHeight: 5 },
+            { type: 'stack-centered', tolerance: 20 }
+        ]
+    },
+    {
+        id: 'stack-006',
+        mode: 'stack-balance',
+        title: 'Color Tower',
+        hint: 'Stack stones so every stone touches a same-color neighbor',
+        difficulty: 3,
+        concepts: ['spatial', 'color-matching', 'planning'],
+        goals: [
+            { type: 'stack-height', minHeight: 4 },
+            { type: 'stack-matching-neighbors' }
+        ]
+    },
+    {
+        id: 'stack-007',
+        mode: 'stack-balance',
+        title: 'Warm Tower',
+        hint: 'Build a tower using only red, orange, and yellow stones',
+        difficulty: 3,
+        concepts: ['spatial', 'color-categories', 'selection'],
+        goals: [
+            { type: 'stack-height', minHeight: 3 },
+            { type: 'stack-all-warm' }
         ]
     }
 ];

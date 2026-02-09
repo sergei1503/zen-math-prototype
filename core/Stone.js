@@ -17,6 +17,9 @@ class Stone {
         this.targetX = x;
         this.targetY = y;
 
+        // Type: 'regular' or 'blackhole'
+        this.type = properties.type || 'regular';
+
         // Rendering
         this.radius = properties.radius || (STONE_RADIUS + Math.random() * 10 - 5);
         this.color = properties.color || COLORS.stone[Math.floor(Math.random() * COLORS.stone.length)];
@@ -24,12 +27,22 @@ class Stone {
         // Organic shape variation (not perfect circles)
         this.shapeOffset = Array(8).fill(0).map(() => Math.random() * 4 - 2);
 
-        // Physics properties (NEW)
+        // Physics properties
         this.mass = properties.mass || 1.0;
         this.dragCoefficient = 1 / this.mass; // Heavier = slower
         this.velocity = { x: 0, y: 0 };
 
-        // Structure metadata (NEW - for NumberStructures mode)
+        // Black hole properties
+        if (this.type === 'blackhole') {
+            this.gravitationalRadius = this.radius * 3; // Influence area
+            this.gravitationalStrength = 200; // Pulling power
+            this.canAbsorb = true;
+        }
+
+        // Label (rendered on the stone)
+        this.label = properties.label || null;
+
+        // Structure metadata (for NumberStructures mode)
         this.structureId = null;
         this.structureIndex = null;
 
@@ -40,6 +53,13 @@ class Stone {
     }
 
     draw(ctx) {
+        // Black hole stones have special rendering
+        if (this.type === 'blackhole') {
+            this._drawBlackHole(ctx);
+            return;
+        }
+
+        // Regular stone rendering
         ctx.save();
 
         // Shadow for depth
@@ -90,6 +110,77 @@ class Stone {
             ctx.stroke();
             ctx.setLineDash([]);
         }
+
+        // Render label text on stone
+        if (this.label !== null && this.label !== undefined) {
+            // Reset shadow to avoid blurred text
+            ctx.shadowColor = 'transparent';
+            ctx.shadowBlur = 0;
+            ctx.shadowOffsetX = 0;
+            ctx.shadowOffsetY = 0;
+
+            const fontSize = Math.round(this.radius * 0.65);
+            ctx.font = `bold ${fontSize}px -apple-system, BlinkMacSystemFont, sans-serif`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+
+            // Dark stroke outline for readability on any stone color
+            ctx.strokeStyle = 'rgba(0, 0, 0, 0.5)';
+            ctx.lineWidth = 3;
+            ctx.strokeText(String(this.label), this.x, this.y);
+
+            // White fill text
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
+            ctx.fillText(String(this.label), this.x, this.y);
+        }
+
+        ctx.restore();
+    }
+
+    _drawBlackHole(ctx) {
+        ctx.save();
+
+        // Gravitational field (outermost glow)
+        const gradientField = ctx.createRadialGradient(
+            this.x, this.y, this.radius * 0.5,
+            this.x, this.y, this.gravitationalRadius
+        );
+        gradientField.addColorStop(0, 'rgba(100, 80, 150, 0.3)');
+        gradientField.addColorStop(0.6, 'rgba(80, 60, 120, 0.1)');
+        gradientField.addColorStop(1, 'rgba(80, 60, 120, 0)');
+        ctx.fillStyle = gradientField;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.gravitationalRadius, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Accretion disk (swirling effect)
+        const gradientRing = ctx.createRadialGradient(
+            this.x, this.y, this.radius * 0.7,
+            this.x, this.y, this.radius * 1.5
+        );
+        gradientRing.addColorStop(0, 'rgba(120, 100, 170, 0)');
+        gradientRing.addColorStop(0.5, 'rgba(100, 80, 150, 0.6)');
+        gradientRing.addColorStop(1, 'rgba(80, 60, 120, 0)');
+        ctx.fillStyle = gradientRing;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius * 1.5, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Black core with shadow
+        ctx.fillStyle = '#0a0a0a';
+        ctx.shadowColor = 'rgba(100, 80, 150, 0.9)';
+        ctx.shadowBlur = 20;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Event horizon ring
+        ctx.strokeStyle = 'rgba(120, 100, 170, 0.5)';
+        ctx.lineWidth = 2;
+        ctx.shadowBlur = 10;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        ctx.stroke();
 
         ctx.restore();
     }
@@ -153,7 +244,8 @@ class Stone {
             radius: this.radius,
             color: this.color,
             mass: this.mass,
-            isLocked: this.isLocked
+            isLocked: this.isLocked,
+            label: this.label
         });
     }
 }

@@ -27,6 +27,14 @@ class ChallengeEngine {
         // Switch to the mode this challenge requires
         this.modeManager.switchMode(challenge.mode);
 
+        // If challenge has an initial configuration, apply it
+        if (challenge.initialConfig) {
+            const mode = this.modeManager.getCurrentMode();
+            if (mode && typeof mode.initWithConfiguration === 'function') {
+                mode.initWithConfiguration(challenge.initialConfig);
+            }
+        }
+
         return true;
     }
 
@@ -138,6 +146,53 @@ class ChallengeEngine {
                     return structuredCount === mode.stones.length;
                 }
                 return false;
+            }
+
+            case 'structure-count': {
+                // Check if there are >= minCount intact structures
+                if (!mode.structures) return false;
+                const intactCount = mode.structures.filter(s => s.intact).length;
+                return intactCount >= goal.minCount;
+            }
+
+            case 'structures-sum-to': {
+                // Check if all intact structure values sum to targetSum
+                if (!mode.structures) return false;
+                const intactStructures = mode.structures.filter(s => s.intact);
+                if (intactStructures.length === 0) return false;
+                const sum = intactStructures.reduce((acc, s) => acc + s.value, 0);
+                return sum === goal.targetSum;
+            }
+
+            case 'stack-centered': {
+                // Check if center of mass is within tolerance of platform center
+                if (!mode._calculateCenterOfMass || !mode.platform) return false;
+                const com = mode._calculateCenterOfMass();
+                if (com.totalMass === 0) return false;
+                const offset = Math.abs(com.x - mode.platform.x);
+                return offset <= (goal.tolerance || 30);
+            }
+
+            case 'stack-matching-neighbors': {
+                // Every stacked stone touches a same-color neighbor
+                if (!mode.stackedStones || mode.stackedStones.length < 2) return false;
+                return mode.stackedStones.every(stone => {
+                    return mode.stackedStones.some(other => {
+                        if (other === stone) return false;
+                        const dist = stone.distanceTo(other);
+                        const touchDist = (stone.radius + other.radius) * 1.5;
+                        return dist < touchDist && stone._baseColor === other._baseColor;
+                    });
+                });
+            }
+
+            case 'stack-all-warm': {
+                // All stacked stones are from warm color set
+                if (!mode.stackedStones || mode.stackedStones.length === 0) return false;
+                const warmColors = ['#C75B5B', '#D4943A', '#C7A83B'];
+                return mode.stackedStones.every(s =>
+                    warmColors.includes(s._baseColor)
+                );
             }
 
             default:
